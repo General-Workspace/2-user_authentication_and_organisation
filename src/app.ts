@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from "express";
 import morgan from "morgan";
 import cors from "cors";
 import { StatusCodes } from "http-status-codes";
+import routes from "./routes/index.route";
 
 class App {
   public app: express.Application;
@@ -26,6 +27,7 @@ class App {
 
   private mountRoutes() {
     // mount route
+    this.app.use("/", routes);
 
     // index route
     this.app.get("/", (_req: Request, res: Response) => {
@@ -54,6 +56,7 @@ class App {
         error: Error,
         _req: Request,
         res: Response,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         _next: NextFunction
       ): void => {
         const err: {
