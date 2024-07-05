@@ -1,14 +1,24 @@
 import { Request } from "express";
+import { ParamsDictionary } from "express-serve-static-core";
+import { ParsedQs } from "qs";
 import { StatusCodes } from "http-status-codes";
 import tryCatch from "../utils/lib/try-catch.lib";
 import response from "../utils/lib/response.lib";
 import prisma from "../config/prisma.config";
 import bcryptHelper from "../utils/helpers/bcrypt.helper";
 import jwtService from "../utils/helpers/jwt.helpers";
-import { RegisterUserRequest, UserResponse } from "../@types";
-import { UserHelperFunction } from "../utils/helpers/userHelper.helper";
+import { RegisterUserRequest, UserResponse, UserObject } from "../@types";
+// import { UserHelperFunction } from "../utils/helpers/userHelper.helper";
 
 type RegisterUser = Request<unknown, unknown, RegisterUserRequest, unknown>;
+
+type RequestObject = Request<
+  ParamsDictionary,
+  unknown,
+  unknown,
+  ParsedQs,
+  Record<string, unknown>
+>;
 class UserService {
   /**
    * @description Registers a new user
@@ -16,16 +26,17 @@ class UserService {
    * @param {UserResponse} res - The response object
    * @returns {Promise<ResponseData<RegisterUserResponse>>} - The response object
    */
-  private token: string | undefined;
+  private accessToken: string | undefined;
   private isPasswordValid: boolean | undefined;
+  private hashedPassword: string | undefined;
 
   public registerUser = tryCatch(
     async (req: RegisterUser, res: UserResponse): Promise<unknown> => {
-      const { username, password, fullname } = req.body;
+      const { firstName, lastName, password, email, phone } = req.body;
 
       const user = await prisma.user.findUnique({
         where: {
-          username,
+          email,
         },
       });
 
@@ -37,47 +48,46 @@ class UserService {
         );
       }
 
-      const hashedPassword = await bcryptHelper.hashPassword(
-        password as string
-      );
+      this.hashedPassword = await bcryptHelper.hashPassword(password as string);
 
-      const userHelper = new UserHelperFunction(fullname as string);
+      // const userHelper = new UserHelperFunction(firstName, lastName);
       // set the fullname
-      userHelper.fullName = fullname as string;
+      // userHelper.fullName = `${firstName} ${lastName}`;
       // get the fullname
-      const getFullName = userHelper.fullName;
 
       const newUser = await prisma.user.create({
         data: {
-          username,
-          password: hashedPassword,
-          fullname: getFullName as string,
+          firstName,
+          lastName,
+          email,
+          password: this.hashedPassword,
+          phone,
         },
       });
 
-      this.token = jwtService.generateToken({ username });
-
-      const session = await prisma.session.create({
+      // create organisation
+      await prisma.organisation.create({
         data: {
-          token: this.token,
-          user: {
-            connect: {
-              id: newUser.id,
-            },
-          },
+          name: `${newUser.firstName}'s Organisation`,
+          description: "",
+          userId: newUser.userId,
         },
       });
 
-      const registerUserResponse: RegisterUserRequest = {
-        id: newUser.id,
-        username: newUser.username,
-        fullname: newUser.fullname as string,
+      this.accessToken = jwtService.generateToken({ email });
+
+      const registerUserResponse = {
+        userId: newUser.userId,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        email: newUser.email,
+        phone: newUser.phone as string,
       };
 
       return response(res).successResponse(
         StatusCodes.CREATED,
-        "User registered successfully",
-        { ...registerUserResponse, token: session.token }
+        "Registration Successful",
+        { accessToken: this.accessToken, user: registerUserResponse }
       );
     }
   );
@@ -90,19 +100,19 @@ class UserService {
    */
 
   public loginUser = tryCatch(async (req: Request, res: UserResponse) => {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
     const user = await prisma.user.findUnique({
       where: {
-        username,
+        email,
       },
     });
 
     if (!user) {
       return response(res).errorResponse(
-        "Not Found",
-        "User not found",
-        StatusCodes.NOT_FOUND
+        "Bad request",
+        "Authentication failed.",
+        StatusCodes.UNAUTHORIZED
       );
     }
 
@@ -112,56 +122,70 @@ class UserService {
     );
     if (!this.isPasswordValid) {
       return response(res).errorResponse(
-        "Unauthorized",
-        "Invalid credentials",
+        "Bad request",
+        "Authentication failed.",
         StatusCodes.UNAUTHORIZED
       );
     }
 
-    // check if user has a valid token
-    const session = await prisma.session.findFirst({
+    this.accessToken = jwtService.generateToken({ email });
+
+    const loginUserResponse = {
+      userId: user.userId,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phone: user.phone as string,
+    };
+
+    return response(res).successResponse(StatusCodes.OK, "Login successful", {
+      accessToken: this.accessToken,
+      user: loginUserResponse,
+    });
+  });
+
+  /**
+   * @description Get user record
+   * @param {Request} req - The request object
+   * @param {UserResponse} res - The response object
+   * @returns {Promise<ResponseData<GetUserResponse>>} - The response object
+   */
+
+  public getUser = tryCatch(async (req: RequestObject, res: UserResponse) => {
+    const { id } = req.params;
+
+    const userObject = (req as unknown as UserObject).user;
+
+    if (userObject.userId !== id) {
+      return response(res).errorResponse(
+        "Forbidden",
+        "Unauthorized access",
+        StatusCodes.FORBIDDEN
+      );
+    }
+
+    const user = await prisma.user.findUnique({
       where: {
-        userId: user.id,
+        userId: id,
+      },
+      select: {
+        userId: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
       },
     });
 
-    if (!session) {
-      this.token = jwtService.generateToken({ username });
-
-      const newSession = await prisma.session.create({
-        data: {
-          token: this.token,
-          userId: user.id,
-        },
-      });
-
-      const loginUserResponse: RegisterUserRequest = {
-        id: user.id,
-        username: user.username,
-        fullname: user.fullname as string,
-      };
-
-      return response(res).successResponse(
-        StatusCodes.OK,
-        "User logged in successfully",
-        { ...loginUserResponse, token: newSession.token }
+    if (!user) {
+      return response(res).errorResponse(
+        "Not Found",
+        "User does not exist",
+        StatusCodes.NOT_FOUND
       );
     }
 
-    // return user object without password
-    const loginUserResponse: RegisterUserRequest = {
-      id: user.id,
-      username: user.username,
-      fullname: user.fullname as string,
-    };
-
-    if (session) {
-      return response(res).successResponse(
-        StatusCodes.OK,
-        "User logged in successfully",
-        { ...loginUserResponse, token: session.token }
-      );
-    }
+    return response(res).successResponse(StatusCodes.OK, "User found", user);
   });
 }
 
