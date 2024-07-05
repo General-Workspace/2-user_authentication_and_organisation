@@ -1,5 +1,9 @@
 import { Router } from "express";
 import { userService } from "../controllers/user.controller";
+import {
+  registerValidation,
+  loginValidation,
+} from "../middlewares/validations/user.validation";
 
 class UserRoute {
   public router: Router;
@@ -10,8 +14,8 @@ class UserRoute {
   }
 
   private routes(): void {
-    this.router.post("/register", userService.registerUser);
-    this.router.post("/login", userService.loginUser);
+    this.router.post("/register", registerValidation, userService.registerUser);
+    this.router.post("/login", loginValidation, userService.loginUser);
   }
 }
 
