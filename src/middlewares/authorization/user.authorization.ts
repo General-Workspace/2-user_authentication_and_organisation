@@ -3,7 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import { ErrorResponseData } from "../../@types";
 import response from "../../utils/lib/response.lib";
 import prisma from "../../config/prisma.config";
-import { User } from "@prisma/client";
+// import { User } from "@prisma/client";
 import jwtService from "../../utils/helpers/jwt.helpers";
 
 interface AuthenticatedUserError {
@@ -13,7 +13,7 @@ interface AuthenticatedUserError {
 }
 
 interface AuthenticatedUserRequest extends Request {
-  user: User;
+  user?: Record<string, unknown>;
 }
 
 type AuthenticatedUserResponse = Response<ErrorResponseData>;

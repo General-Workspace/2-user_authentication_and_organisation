@@ -10,7 +10,8 @@ class UserRoute {
   }
 
   private routes(): void {
-    this.router.post("/user/register", userService.registerUser);
+    this.router.post("/register", userService.registerUser);
+    this.router.post("/login", userService.loginUser);
   }
 }
 

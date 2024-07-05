@@ -14,20 +14,23 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  username  String    @unique
-  fullname  String?
-  password  String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  Session   Session[]
+  userId       String         @id @default(cuid())
+  firstName    String
+  lastName     String
+  password     String
+  email        String         @unique
+  phone        String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  organisation Organisation[]
 }
 
-model Session {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Organisation {
+  orgId       String   @id @default(cuid())
+  name        String
+  description String
+  userId      String
+  user        User     @relation(fields: [userId], references: [userId])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

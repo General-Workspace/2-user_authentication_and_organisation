@@ -4,8 +4,9 @@ declare type ResponseData<T> = Response<T>;
 
 declare interface SuccessResponseData<T> {
   success: boolean;
-  data: T;
   statusCode: number;
+  message: string;
+  data: T;
 }
 
 declare interface ErrorResponseData {
@@ -22,6 +23,7 @@ interface RegisterUserRequest {
   username: string;
   password?: string;
   fullname: string;
+  [key: string]: unknown;
 }
 
 declare type UserResponse = ResponseData<

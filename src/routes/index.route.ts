@@ -1,5 +1,6 @@
 import { Router } from "express";
 import userRoute from "./user.route";
+import songRoute from "./song.route";
 
 class IndexRoute {
   public router: Router;
@@ -10,7 +11,8 @@ class IndexRoute {
   }
 
   private routes(): void {
-    this.router.use("/api", userRoute);
+    this.router.use("/user", userRoute);
+    this.router.use("/song", songRoute);
   }
 }
 

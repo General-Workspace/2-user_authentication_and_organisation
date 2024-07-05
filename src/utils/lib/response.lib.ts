@@ -5,9 +5,14 @@ import { ErrorResponseData, SuccessResponseData } from "../../@types";
 class ResponseHandler {
   constructor(private res: Response) {}
 
-  public successResponse<T>(data: T, statusCode = StatusCodes.OK) {
+  public successResponse<T>(
+    statusCode = StatusCodes.OK,
+    message: string,
+    data: T
+  ) {
     const successResponse: SuccessResponseData<T> = {
       success: true,
+      message,
       data,
       statusCode,
     };

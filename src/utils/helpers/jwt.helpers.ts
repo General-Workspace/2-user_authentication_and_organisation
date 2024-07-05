@@ -18,6 +18,9 @@ class JWTService {
 
   public generateToken(payload: object): string {
     const token = jwt.sign(payload, this.secret, { expiresIn: this.expiresIn });
+    if (!token) {
+      throw new Error("Token generation failed");
+    }
     return token;
   }
 

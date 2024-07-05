@@ -19,7 +19,7 @@ class BcryptHelper {
    * @returns {Promise<boolean>} - True if the passwords match, false otherwise
    */
 
-  public async compare(
+  public async comparePassword(
     password: string,
     hashedPassword: string
   ): Promise<boolean> {

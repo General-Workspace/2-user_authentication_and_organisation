@@ -27,7 +27,7 @@ class App {
 
   private mountRoutes() {
     // mount route
-    this.app.use("/", routes);
+    this.app.use("/api", routes);
 
     // index route
     this.app.get("/", (_req: Request, res: Response) => {
