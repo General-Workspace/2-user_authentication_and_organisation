@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { StatusCodes, getReasonPhrase } from "http-status-codes";
+import { StatusCodes } from "http-status-codes";
 import { ErrorResponseData, SuccessResponseData } from "../../@types";
 
 class ResponseHandler {
@@ -11,7 +11,7 @@ class ResponseHandler {
     data: T
   ) {
     const successResponse: SuccessResponseData<T> = {
-      success: true,
+      status: "success",
       message,
       data,
       statusCode,
@@ -20,17 +20,14 @@ class ResponseHandler {
   }
 
   public errorResponse(
-    type: string,
+    status: string,
     message: string,
     statusCode = StatusCodes.INTERNAL_SERVER_ERROR
   ) {
     const errorResponse: ErrorResponseData = {
-      success: false,
-      error: {
-        type: type || getReasonPhrase(statusCode),
-        message,
-        statusCode,
-      },
+      status,
+      message,
+      statusCode,
     };
     this.res.status(statusCode).json(errorResponse);
   }
