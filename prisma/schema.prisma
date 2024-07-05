@@ -19,7 +19,7 @@ model User {
   lastName     String
   password     String
   email        String         @unique
-  phone        String
+  phone        String?
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   organisation Organisation[]
@@ -28,7 +28,7 @@ model User {
 model Organisation {
   orgId       String   @id @default(cuid())
   name        String
-  description String
+  description String?
   userId      String
   user        User     @relation(fields: [userId], references: [userId])
   createdAt   DateTime @default(now())
