@@ -3,7 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import { ErrorResponseData } from "../../@types";
 import response from "../../utils/lib/response.lib";
 import prisma from "../../config/prisma.config";
-// import { User } from "@prisma/client";
+import { User } from "@prisma/client";
 import jwtService from "../../utils/helpers/jwt.helpers";
 
 interface AuthenticatedUserError {
@@ -13,7 +13,7 @@ interface AuthenticatedUserError {
 }
 
 interface AuthenticatedUserRequest extends Request {
-  user?: Record<string, unknown>;
+  user?: User;
 }
 
 type AuthenticatedUserResponse = Response<ErrorResponseData>;
@@ -71,9 +71,10 @@ class AuthService {
 
       const user = await prisma.user.findUnique({
         where: {
-          id: payload["id"] as string,
+          email: payload["email"] as string,
         },
       });
+
       if (!user) {
         const err: AuthenticatedUserError = {
           type: "Not Found",
@@ -92,8 +93,9 @@ class AuthService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       return this.res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error,
+        status: "error",
+        message: error.message,
+        statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       });
     }
   }
