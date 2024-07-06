@@ -8,7 +8,7 @@ import prisma from "../config/prisma.config";
 import bcryptHelper from "../utils/helpers/bcrypt.helper";
 import jwtService from "../utils/helpers/jwt.helpers";
 import { RegisterUserRequest, UserResponse, UserObject } from "../@types";
-// import { UserHelperFunction } from "../utils/helpers/userHelper.helper";
+import { UserHelperFunction } from "../utils/helpers/userHelper.helper";
 
 type RegisterUser = Request<unknown, unknown, RegisterUserRequest, unknown>;
 
@@ -50,15 +50,14 @@ class UserService {
 
       this.hashedPassword = await bcryptHelper.hashPassword(password as string);
 
-      // const userHelper = new UserHelperFunction(firstName, lastName);
-      // set the fullname
-      // userHelper.fullName = `${firstName} ${lastName}`;
+      const userHelper = new UserHelperFunction(firstName, lastName);
       // get the fullname
+      userHelper.capitalizeName = `${firstName} ${lastName}`;
 
       const newUser = await prisma.user.create({
         data: {
-          firstName,
-          lastName,
+          firstName: userHelper.firstname,
+          lastName: userHelper.lastname,
           email,
           password: this.hashedPassword,
           phone,
