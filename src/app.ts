@@ -32,7 +32,7 @@ export class App {
     // index route
     this.app.get("/", (_req: Request, res: Response) => {
       res.status(StatusCodes.OK).json({
-        message: "🚀 Welcome to this song recommendation app.",
+        message: "🚀 Welcome to this Auth Service app.",
       });
     });
 
