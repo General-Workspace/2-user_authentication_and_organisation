@@ -1,6 +1,10 @@
 import { Router } from "express";
 import { organisationService } from "../controllers/organization.controller";
 import authenticatedUser from "../middlewares/authorization/user.authorization";
+import {
+  createOrganizationValidation,
+  getOrganizationValidation,
+} from "../middlewares/validations/organization.validation";
 
 class OrganisationRoute {
   public router: Router;
@@ -18,11 +22,13 @@ class OrganisationRoute {
     );
     this.router.get(
       "/organisations/:orgId",
+      getOrganizationValidation,
       authenticatedUser,
       organisationService.getOrganisation
     );
     this.router.post(
       "/organisations",
+      createOrganizationValidation,
       authenticatedUser,
       organisationService.createOrganisation
     );

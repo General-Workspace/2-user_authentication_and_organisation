@@ -1,4 +1,4 @@
-import { body, validationResult } from "express-validator";
+import { body, param, validationResult } from "express-validator";
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 
@@ -32,28 +32,40 @@ export const registerValidation = [
   body("firstName")
     .exists()
     .withMessage("First name is required")
+    .notEmpty()
+    .withMessage("First name cannot be empty")
     .isString()
-    .withMessage("Please enter a valid first name")
+    .withMessage("First name must be a string")
     .trim()
     .escape(),
   body("lastName")
     .exists()
     .withMessage("Last name is required")
+    .notEmpty()
+    .withMessage("Last name cannot be empty")
     .isString()
-    .withMessage("Please enter a valid last name")
+    .withMessage("Last name must be a string")
     .trim()
     .escape(),
   body("email")
     .exists()
     .withMessage("Email is required")
+    .notEmpty()
+    .withMessage("Email cannot be empty")
     .isEmail()
     .withMessage("Please enter a valid email address")
+    .isString()
+    .withMessage("Email must be a string")
     .normalizeEmail()
     .trim()
     .escape(),
   body("password")
     .exists()
     .withMessage("Password is required")
+    .notEmpty()
+    .withMessage("Password cannot be empty")
+    .isString()
+    .withMessage("Password must be a string")
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long")
     .isStrongPassword()
@@ -65,7 +77,7 @@ export const registerValidation = [
   body("phone")
     .optional()
     .isString()
-    .withMessage("Please enter a valid phone number")
+    .withMessage("Phone number must be a string")
     .trim()
     .escape(),
 
@@ -73,7 +85,7 @@ export const registerValidation = [
     const errors = validationResult(req).formatWith(errorFormatter);
     if (!errors.isEmpty()) {
       return res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({
-        errors: errors.array(),
+        errors: errors.mapped(),
       });
     }
     return next();
@@ -94,6 +106,28 @@ export const loginValidation = [
     .withMessage("Password is required")
     .isString()
     .withMessage("Please enter a valid password")
+    .trim()
+    .escape(),
+
+  (req: Request, res: ValidateUserResponse, next: NextFunction) => {
+    const errors = validationResult(req).formatWith(errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({
+        errors: errors.array(),
+      });
+    }
+    return next();
+  },
+];
+
+export const getUserProfileValidation = [
+  param("id")
+    .exists()
+    .withMessage("User ID is required")
+    .notEmpty()
+    .withMessage("User ID cannot be empty")
+    .isString()
+    .withMessage("Please enter a valid user ID")
     .trim()
     .escape(),
 

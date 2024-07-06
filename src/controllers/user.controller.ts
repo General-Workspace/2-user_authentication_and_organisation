@@ -42,9 +42,9 @@ class UserService {
 
       if (user) {
         return response(res).errorResponse(
-          "Conflict",
-          "User already exists",
-          StatusCodes.CONFLICT
+          "Bad request",
+          "Registration unsuccessful.",
+          StatusCodes.BAD_REQUEST
         );
       }
 
@@ -60,7 +60,7 @@ class UserService {
           lastName: userHelper.lastname,
           email,
           password: this.hashedPassword,
-          phone,
+          phone: phone as string,
         },
       });
 

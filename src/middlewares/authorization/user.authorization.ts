@@ -30,8 +30,8 @@ class AuthService {
       const authHeader = this.req.headers.authorization;
       if (!authHeader || !authHeader.startsWith("Bearer ")) {
         const err: AuthenticatedUserError = {
-          type: "Unauthorized",
-          message: "Unauthorized access",
+          type: "Bad request",
+          message: "Authentication failed.",
           statusCode: StatusCodes.UNAUTHORIZED,
         };
         return response(this.res).errorResponse(
@@ -44,8 +44,8 @@ class AuthService {
       const token = authHeader.split(" ")[1];
       if (!token) {
         const err: AuthenticatedUserError = {
-          type: "Unauthorized",
-          message: "Unauthorized access",
+          type: "Bad request",
+          message: "Authentication failed.",
           statusCode: StatusCodes.UNAUTHORIZED,
         };
         return response(this.res).errorResponse(
@@ -58,9 +58,9 @@ class AuthService {
       const payload = jwtService.verifyToken(token);
       if (!payload) {
         const err: AuthenticatedUserError = {
-          type: "Forbidden",
-          message: "Please provide a valid token",
-          statusCode: StatusCodes.FORBIDDEN,
+          type: "Bad request",
+          message: "Authentication failed.",
+          statusCode: StatusCodes.UNAUTHORIZED,
         };
         return response(this.res).errorResponse(
           err.type,
@@ -77,9 +77,9 @@ class AuthService {
 
       if (!user) {
         const err: AuthenticatedUserError = {
-          type: "Not Found",
-          message: "User does not exist.",
-          statusCode: StatusCodes.NOT_FOUND,
+          type: "Bad request",
+          message: "Authentication failed.",
+          statusCode: StatusCodes.UNAUTHORIZED,
         };
         return response(this.res).errorResponse(
           err.type,
@@ -93,9 +93,9 @@ class AuthService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       return this.res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        status: "error",
-        message: error.message,
-        statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+        status: "Bad request",
+        message: "Authentication failed.",
+        statusCode: StatusCodes.UNAUTHORIZED,
       });
     }
   }

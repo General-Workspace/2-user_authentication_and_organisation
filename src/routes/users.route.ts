@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { userService } from "../controllers/user.controller";
 import authenticatedUser from "../middlewares/authorization/user.authorization";
+import { getUserProfileValidation } from "../middlewares/validations/user.validation";
 
 class UsersRoute {
   public router: Router;
@@ -11,7 +12,12 @@ class UsersRoute {
   }
 
   private routes(): void {
-    this.router.get("/users/:id", authenticatedUser, userService.getUser);
+    this.router.get(
+      "/users/:id",
+      getUserProfileValidation,
+      authenticatedUser,
+      userService.getUser
+    );
   }
 }
 
