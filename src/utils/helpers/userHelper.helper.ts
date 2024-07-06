@@ -1,18 +1,23 @@
 export class UserHelperFunction {
-  private fullname: string;
+  private firstName: string;
+  private lastName: string;
 
-  constructor(fullname: string) {
-    this.fullname = fullname;
+  constructor(firstName: string, lastName: string) {
+    this.firstName = firstName;
+    this.lastName = lastName;
   }
 
-  public get fullName(): string {
-    return this.fullname;
+  public get firstname(): string {
+    return this.firstName;
   }
 
-  public set fullName(fullName: string) {
+  public get lastname(): string {
+    return this.lastName;
+  }
+
+  public set capitalizeName(fullName: string) {
     const parts = fullName.split(" ");
-    const firstName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
-    const lastName = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
-    this.fullname = `${firstName} ${lastName}`;
+    this.firstName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+    this.lastName = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
   }
 }
