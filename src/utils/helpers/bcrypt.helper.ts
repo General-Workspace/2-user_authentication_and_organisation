@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 
-class BcryptHelper {
+export class BcryptHelper {
   /**
    * @description Hashes a password using bcrypt
    * @param {string} password - The password to hash

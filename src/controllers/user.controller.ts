@@ -163,6 +163,8 @@ class UserService {
       );
     }
 
+    // user id does not belong to the organisation
+
     const user = await prisma.user.findUnique({
       where: {
         userId: id,

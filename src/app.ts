@@ -1,11 +1,11 @@
-import express, { Request, Response, NextFunction } from "express";
+import express, { Request, Response, NextFunction, Application } from "express";
 import morgan from "morgan";
 import cors from "cors";
 import { StatusCodes } from "http-status-codes";
 import routes from "./routes/index.route";
 
-class App {
-  public app: express.Application;
+export class App {
+  public app: Application;
   //   public port: string | number;
 
   constructor(/*controllers: any, port: string | number*/) {

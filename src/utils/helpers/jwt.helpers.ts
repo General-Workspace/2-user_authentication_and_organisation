@@ -1,6 +1,6 @@
 import jwt, { Secret, TokenExpiredError } from "jsonwebtoken";
 
-class JWTService {
+export class JWTService {
   private secret: Secret;
   private expiresIn: string | number;
 
