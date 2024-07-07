@@ -270,4 +270,32 @@ describe("POST /auth/login", () => {
     expect(response.body.statusCode).toBe(200);
     expect(response.body.data.accessToken).toBeTruthy();
   });
+
+  it("should return an error if user does not exist", async () => {
+    const response = await request(app)
+      .post("/auth/login")
+      .send({ email: "michaeldoe@test.com", password: "Test123$" })
+      .expect(401);
+
+    expect(response.body).toHaveProperty("message");
+    expect(response.body).toHaveProperty("statusCode");
+    expect(response.body).toHaveProperty("status");
+    expect(response.body.message).toBe("Authentication failed.");
+    expect(response.body.status).toBe("Bad request");
+    expect(response.body.statusCode).toBe(401);
+  });
+
+  it("should return an error if password is incorrect", async () => {
+    const response = await request(app)
+      .post("/auth/login")
+      .send({ email: existingUser.email, password: "Test123" })
+      .expect(401);
+
+    expect(response.body).toHaveProperty("message");
+    expect(response.body).toHaveProperty("statusCode");
+    expect(response.body).toHaveProperty("status");
+    expect(response.body.message).toBe("Authentication failed.");
+    expect(response.body.status).toBe("Bad request");
+    expect(response.body.statusCode).toBe(401);
+  });
 });
