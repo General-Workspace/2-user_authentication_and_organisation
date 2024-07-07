@@ -1,9 +1,18 @@
 import request from "supertest";
 import { App } from "../src/app";
 import prisma from "../src/config/prisma.config";
-import { BcryptHelper } from "../src/utils/helpers/bcrypt.helper";
-import { JWTService } from "../src/utils/helpers/jwt.helpers";
+import bcryptHelper, { BcryptHelper } from "../src/utils/helpers/bcrypt.helper";
+import jwtService, { JWTService } from "../src/utils/helpers/jwt.helpers";
 import { Application } from "express";
+
+interface MockUser {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phone: string | null;
+}
 
 // mock user data
 const mockUserData = {
@@ -13,11 +22,6 @@ const mockUserData = {
   password: "Test123$",
   phone: "08012345678",
 };
-
-// const mockLoginData = {
-//   email: "johndoe@test.com",
-//   password: "Test123$",
-// };
 
 // helper functions to clear the database before each test
 const clearDatabase = async () => {
@@ -29,7 +33,8 @@ const clearDatabase = async () => {
 let app: Application;
 let token: string;
 let orgId: string;
-// let hashedPassword: string;
+let hashedPassword: string;
+let existingUser: MockUser;
 
 describe("POST /auth/register", () => {
   beforeAll(async () => {
@@ -205,66 +210,64 @@ describe("GET /organisations/:orgId", () => {
   });
 });
 
-// describe("POST /auth/login", () => {
-//   beforeAll(async () => {
-//     app = new App().app;
-//   });
+describe("POST /auth/login", () => {
+  beforeAll(async () => {
+    app = new App().app;
+  });
 
-//   beforeEach(async () => {
-//     await clearDatabase();
+  beforeEach(async () => {
+    await clearDatabase();
 
-//     const bcryptHelper = new BcryptHelper();
-//     hashedPassword = await bcryptHelper.hashPassword(mockUserData.password);
-//     mockUserData.password = hashedPassword;
+    const bcryptHelper = new BcryptHelper();
+    hashedPassword = await bcryptHelper.hashPassword("Test123$");
 
-//     await prisma.user.create({
-//       data: mockUserData,
-//     });
+    existingUser = await prisma.user.create({
+      data: {
+        firstName: "Jane",
+        lastName: "Doe",
+        email: "janedoe@test.com",
+        password: hashedPassword,
+        phone: "08012345678",
+      },
+    });
+  });
 
-//     const user = await prisma.user.findUnique({
-//       where: { email: mockLoginData.email },
-//     });
+  afterAll(async () => {
+    await prisma.$disconnect();
+  });
 
-//     const isPasswordValid = await bcryptHelper.comparePassword(
-//       mockLoginData.password,
-//       user?.password as string
-//     );
-//     console.log(isPasswordValid);
+  it("should login a user successfully", async () => {
+    const response = await request(app)
+      .post("/auth/login")
+      .send({ email: existingUser.email, password: "Test123$" })
+      .expect(200);
 
-//     const jwtService = new JWTService(
-//       process.env["JWT_SECRET"] as string,
-//       "1h"
-//     );
+    const user = await prisma.user.findUnique({
+      where: {
+        email: existingUser.email,
+      },
+    });
 
-//     token = jwtService.generateToken({ email: mockUserData.email });
-//   });
+    await bcryptHelper.comparePassword("Test123$", user?.password as string);
 
-//   afterAll(async () => {
-//     await prisma.$disconnect();
-//   });
+    jwtService.generateToken({ email: existingUser.email });
 
-//   it("should login a user successfully", async () => {
-//     const response = await request(app)
-//       .post("/auth/login")
-//       .send(mockLoginData)
-//       .expect(200);
+    expect(response.body).toHaveProperty("data");
+    expect(response.body).toHaveProperty("message");
+    expect(response.body.data).toHaveProperty("accessToken");
+    expect(response.body.data).toHaveProperty("user");
+    expect(response.body.data.user).toHaveProperty("userId");
+    expect(response.body.data.user).toHaveProperty("firstName");
+    expect(response.body.data.user).toHaveProperty("lastName");
+    expect(response.body.data.user).toHaveProperty("email");
+    expect(response.body.data.user).toHaveProperty("phone");
 
-//     expect(response.body).toHaveProperty("data");
-//     expect(response.body).toHaveProperty("message");
-//     expect(response.body.data).toHaveProperty("accessToken");
-//     expect(response.body.data).toHaveProperty("user");
-//     expect(response.body.data.user).toHaveProperty("userId");
-//     expect(response.body.data.user).toHaveProperty("firstName");
-//     expect(response.body.data.user).toHaveProperty("lastName");
-//     expect(response.body.data.user).toHaveProperty("email");
-//     expect(response.body.data.user).toHaveProperty("phone");
-
-//     expect(response.body.data.user.firstName).toBe(mockUserData.firstName);
-//     expect(response.body.data.user.lastName).toBe(mockUserData.lastName);
-//     expect(response.body.data.user.email).toBe(mockUserData.email);
-//     expect(response.body.data.user.phone).toBe(mockUserData.phone);
-//     expect(response.body.message).toBe("Login Successful");
-//     expect(response.body.statusCode).toBe(200);
-//     expect(response.body.data.accessToken).toBeTruthy();
-//   });
-// });
+    expect(response.body.data.user.firstName).toBe(existingUser.firstName);
+    expect(response.body.data.user.lastName).toBe(existingUser.lastName);
+    expect(response.body.data.user.email).toBe(existingUser.email);
+    expect(response.body.data.user.phone).toBe(existingUser.phone);
+    expect(response.body.message).toBe("Login successful");
+    expect(response.body.statusCode).toBe(200);
+    expect(response.body.data.accessToken).toBeTruthy();
+  });
+});
