@@ -92,6 +92,13 @@ class OrganisationService {
         where: {
           orgId: orgId,
         },
+        include: {
+          users: {
+            include: {
+              user: true,
+            },
+          },
+        },
       });
 
       if (!organisation) {

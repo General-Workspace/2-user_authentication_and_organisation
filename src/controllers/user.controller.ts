@@ -153,24 +153,9 @@ class UserService {
   public getUser = tryCatch(async (req: RequestObject, res: UserResponse) => {
     const { id } = req.params;
 
-    const userObject = (req as unknown as UserObject).user;
+    const loggedInUserId = (req as unknown as UserObject).user.userId;
 
-    const userInOrganisation = await prisma.organisation.findFirst({
-      where: {
-        userId: id,
-      },
-    });
-
-    if (userObject.userId !== id && !userInOrganisation) {
-      return response(res).errorResponse(
-        "Forbidden",
-        "Unauthorized access",
-        StatusCodes.FORBIDDEN
-      );
-    }
-
-    // user id does not belong to the organisation
-
+    // find the user
     const user = await prisma.user.findUnique({
       where: {
         userId: id,
@@ -186,26 +171,72 @@ class UserService {
 
     if (!user) {
       return response(res).errorResponse(
-        "Not Found",
-        "User does not exist",
+        "Not found",
+        "User not found",
         StatusCodes.NOT_FOUND
       );
     }
 
-    // const userInOrganisation = await prisma.organisation.findFirst({
-    //   where: {
-    //     userId: id,
-    //   },
-    // });
-    // if (!userInOrganisation) {
-    //   return response(res).errorResponse(
-    //     "Not Found",
-    //     "User does not belong to an organisation",
-    //     StatusCodes.NOT_FOUND
-    //   );
-    // }
+    // Fetch all the organisations the user belongs to
+    const userOrgs = await prisma.organisation.findMany({
+      where: {
+        userId: user.userId,
+      },
+      select: {
+        orgId: true,
+      },
+    });
+    const userOrgs2 = await prisma.organisationUser.findMany({
+      where: {
+        userId: user.userId,
+      },
+      select: {
+        orgId: true,
+      },
+    });
 
-    return response(res).successResponse(StatusCodes.OK, "User found", user);
+    const orgUserBelongsTo = userOrgs.concat(userOrgs2);
+
+    // Organisations logged in user belongs to
+    const loggedInUserOrgs = await prisma.organisation.findMany({
+      where: {
+        userId: loggedInUserId,
+      },
+      select: {
+        orgId: true,
+      },
+    });
+    const loggedInUserOrgs2 = await prisma.organisationUser.findMany({
+      where: {
+        userId: loggedInUserId,
+      },
+      select: {
+        orgId: true,
+      },
+    });
+    const orgLoggedInUserBelongsTo = loggedInUserOrgs.concat(loggedInUserOrgs2);
+
+    const userOrgsIds = orgUserBelongsTo.map((org) => org.orgId);
+    const loggedInUserOrgsIds = orgLoggedInUserBelongsTo.map(
+      (org) => org.orgId
+    );
+    const orgsInCommon = userOrgsIds.filter((orgId) =>
+      loggedInUserOrgsIds.includes(orgId)
+    );
+
+    if (orgsInCommon.length === 0) {
+      return response(res).errorResponse(
+        "Unauthorized",
+        "User not authorized",
+        StatusCodes.UNAUTHORIZED
+      );
+    }
+
+    return response(res).successResponse(
+      StatusCodes.OK,
+      "User retrieved successfully",
+      { user }
+    );
   });
 }
 
