@@ -155,7 +155,13 @@ class UserService {
 
     const userObject = (req as unknown as UserObject).user;
 
-    if (userObject.userId !== id) {
+    const userInOrganisation = await prisma.organisation.findFirst({
+      where: {
+        userId: id,
+      },
+    });
+
+    if (userObject.userId !== id && !userInOrganisation) {
       return response(res).errorResponse(
         "Forbidden",
         "Unauthorized access",
@@ -185,6 +191,19 @@ class UserService {
         StatusCodes.NOT_FOUND
       );
     }
+
+    // const userInOrganisation = await prisma.organisation.findFirst({
+    //   where: {
+    //     userId: id,
+    //   },
+    // });
+    // if (!userInOrganisation) {
+    //   return response(res).errorResponse(
+    //     "Not Found",
+    //     "User does not belong to an organisation",
+    //     StatusCodes.NOT_FOUND
+    //   );
+    // }
 
     return response(res).successResponse(StatusCodes.OK, "User found", user);
   });
