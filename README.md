@@ -1,6 +1,6 @@
 # Authentication Service
 
-This is a simple authentication service that allows users to sign up and log in. The service is built using Node.js, TypeScript, Express, and Postgres. At signup, a default organization is created using the user's first name.
+Simple authentication service that allows users to sign up and log in. The service is built using Node.js, TypeScript, Express, and Postgres. At signup, a default organization is created using the user's first name.
 
 ## Installation
 
