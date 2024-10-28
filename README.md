@@ -16,8 +16,8 @@ Simple authentication service that allows users to sign up and log in. The servi
 
 The following endpoints are available:
 
-> - `POST /auth/register` - Create a new user
-> - `POST /auth/login` - Sign in a user
+> - `POST /auth/register` - New user registration 
+> - `POST /auth/login` - User login
 > - `GET /api/users/:id` - Get the current user
 > - `GET /api/organisation/:orgId` - Get the organization details
 > - `POST /api/organisations` - Create a new organization
